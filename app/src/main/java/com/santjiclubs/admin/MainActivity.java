@@ -46,6 +46,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(Color.rgb(16, 19, 28));
         getWindow().setNavigationBarColor(Color.rgb(16, 19, 28));
+        // Keep the WebView content below the Android status bar and above
+        // the navigation/gesture area (important on Android 15 / targetSdk 35).
         buildLayout();
         configureWebView();
         if (savedInstanceState == null) webView.loadUrl(HOME_URL);
@@ -55,6 +57,15 @@ public class MainActivity extends Activity {
     private void buildLayout() {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.rgb(16, 19, 28));
+        root.setOnApplyWindowInsetsListener((view, insets) -> {
+            int top = insets.getSystemWindowInsetTop();
+            int bottom = insets.getSystemWindowInsetBottom();
+            view.setPadding(0, top, 0, bottom);
+            // Insets are handled by this root view; prevent child views from
+            // applying the same system-bar spacing a second time.
+            return insets.consumeSystemWindowInsets();
+        });
+        root.post(root::requestApplyInsets);
         webView = new WebView(this);
         progress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         progress.setMax(100);
